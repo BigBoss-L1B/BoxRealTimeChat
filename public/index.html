@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebSocket Chat</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center; /* Căn giữa nội dung */
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #f0f0f0;
+    }
+
+    /* Container chính */
+    .main-container {
+      display: flex;
+      justify-content: flex-start; /* Đẩy khung chat về bên phải */
+      align-items: center;
+      width: 100%;
+      max-width: 1200px;
+    }
+
+    /* Phần chứa ảnh động */
+    .animation-container {
+      width: 60%; /* Chiếm 60% chiều rộng */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .animation-container img {
+      max-width: 90%;
+      height: auto;
+      border-radius: 10px;
+    }
+
+    /* Chat bubble styling */
+    .chat-container {
+      display: flex;
+      flex-direction: column;
+      width: 400px;
+      height: 97vh;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+      background-color: white;
+      margin-left: 20px; /* Khoảng cách giữa khung chat và ảnh động */
+    }
+
+    .messages-container {
+      flex-grow: 1;
+      overflow-y: auto;
+      padding: 15px;
+      background-color: #f9f9f9;
+    }
+
+    .message-container {
+      display: flex;
+      align-items: flex-start;
+      margin: 10px 0;
+    }
+
+    .message-bubble {
+      background-color: #cdcfd1;
+      padding: 12px 18px;
+      border-radius: 50px;
+      max-width: 65%;
+      word-wrap: break-word;
+      box-shadow: 0 0 50px rgba(0, 0, 0, 0.05);
+    }
+
+    .sender-message-container {
+      justify-content: flex-end;
+    }
+
+    .sender-message-bubble {
+      background-color: #49CC6C;
+      color: white;
+    }
+
+    .message-input-container {
+      display: flex;
+      align-items: center;
+      padding: 12px;
+      background-color: white;
+      border-top: 1px solid #ddd;
+    }
+
+    #messageInput {
+      flex-grow: 1;
+      margin-right: 8px;
+      border: none;
+      outline: none;
+      border-radius: 50px;
+      height: 35px;
+      font-size: 16px;
+      background-color: #f8f9fa;
+      padding: 8px 12px;
+    }
+
+    #sendButton {
+      background-color: #49CC6C;
+      border-radius: 50px;
+      outline: none;
+      border: none;
+      padding: 12px 14px;
+      color: #fff;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    #sendButton:hover {
+      box-shadow: 0 0 50px rgba(0, 0, 0, 0.05);
+    }
+
+    #sendButton:active {
+      background-color: #3b9aff;
+    }
+
+    .avatar {
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      margin-right: 12px;
+      object-fit: cover;
+      display: inline-block;
+    }
+  </style>
+</head>
+<body>
+  <div class="main-container">
+    <!-- Phần ảnh động -->
+    <div class="animation-container">
+      <img src="https://thuthuatnhanh.com/wp-content/uploads/2020/09/hinh-anh-gif-thanh-pho-hien-dai.gif" alt="Chat Animation">
+    </div>
+
+    <!-- Khung chat -->
+    <div class="chat-container">
+      <div class="messages-container" id="messages"></div>
+      <div class="message-input-container">
+        <input type="text" id="messageInput" placeholder="Type a message...">
+        <button type="submit" id="sendButton"><strong>Send</strong></button>
+      </div>
+    </div>
+  </div>
+  <script>
+    const messagesDiv = document.getElementById('messages');
+    const messageInput = document.getElementById('messageInput');
+    const sendButton = document.getElementById('sendButton');
+    const ws = new WebSocket('ws://localhost:3000');
+  
+    ws.addEventListener('message', (event) => {
+      const message = event.data;
+      displayMessage(message);
+    });
+  
+    sendButton.addEventListener('click', () => {
+      sendMessage();
+    });
+
+    messageInput.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        sendMessage();
+      }
+    });
+
+    function sendMessage() {
+      const message = messageInput.value.trim();
+      if (message) {
+        ws.send(message);
+        displayMessage(message, true);
+        messageInput.value = '';
+      }
+    }
+
+    function displayMessage(message, isSender = false) {
+      const messageContainer = document.createElement('div');
+      const avatar = document.createElement('img');
+      const messageElement = document.createElement('div');
+
+      avatar.src = isSender 
+        ? 'https://png.pngtree.com/png-vector/20230316/ourmid/pngtree-admin-and-customer-service-job-vacancies-vector-png-image_6650726.png' 
+        : 'https://img.lovepik.com/element/40145/1024.png_860.png';
+      avatar.alt = 'Avatar';
+      avatar.classList.add('avatar');
+
+      messageElement.textContent = message;
+      messageElement.classList.add('message-bubble');
+
+      if (isSender) {
+        messageContainer.classList.add('message-container', 'sender-message-container');
+        messageElement.classList.add('sender-message-bubble');
+      } else {
+        messageContainer.classList.add('message-container');
+      }
+
+      messageContainer.appendChild(avatar);
+      messageContainer.appendChild(messageElement);
+      messagesDiv.appendChild(messageContainer);
+
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+  </script>
+</body>
+</html>
